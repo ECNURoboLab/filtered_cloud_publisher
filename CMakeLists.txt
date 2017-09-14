@@ -19,9 +19,22 @@ find_package(catkin REQUIRED
         std_msgs
         geometry_msgs
         gpd
+        message_generation
 )
 
 find_package(Boost REQUIRED)
+
+## Generate actions in the 'action' folder
+add_action_files(
+        FILES
+        GpdAdapter.action
+)
+generate_messages(
+        DEPENDENCIES
+        std_msgs
+        geometry_msgs
+        actionlib_msgs
+)
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -72,6 +85,21 @@ target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
 
+
+add_executable(gpd_adapter_action_node
+        src/gpd_adapter_action_node.cpp
+        src/GpdAdapterActionServer.cpp
+        )
+add_dependencies(gpd_adapter_action_node
+        ${PROJECT_NAME}_generate_messages_cpp)
+target_link_libraries(gpd_adapter_action_node
+        ${catkin_LIBRARIES}
+        )
+
+add_executable(action_client_test
+        src/action_client_test.cpp)
+target_link_libraries(action_client_test
+        ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############

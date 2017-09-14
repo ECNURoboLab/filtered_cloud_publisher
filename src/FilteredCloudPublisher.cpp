@@ -5,7 +5,9 @@
 
 namespace filtered_cloud_publisher {
     FilteredCloudPublisher::FilteredCloudPublisher(ros::NodeHandle &nodeHandle)
-            : nh_(nodeHandle) {
+            : nh_(nodeHandle)
+            , p_nh_()
+    {
         if (!readParameters()) {
             ROS_ERROR("Could not read parameters.");
             ROS_ERROR("Use default value !!!!");
