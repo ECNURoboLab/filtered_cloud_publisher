@@ -1,25 +1,25 @@
 #pragma once
 
-#include "ros_package_template/Algorithm.hpp"
+#include "filtered_cloud_publisher/Algorithm.hpp"
 
 // ROS
 #include <ros/ros.h>
 #include <sensor_msgs/Temperature.h>
 #include <std_srvs/Trigger.h>
 
-namespace ros_package_template {
+namespace filtered_cloud_publisher {
 
 /*!
  * Main class for the node to handle the ROS interfacing.
  */
-class RosPackageTemplate
+class FilteredCloudPublisher
 {
  public:
   /*!
    * Constructor.
    * @param nodeHandle the ROS node handle.
    */
-  RosPackageTemplate(ros::NodeHandle& nodeHandle);
+  FilteredCloudPublisher(ros::NodeHandle& nodeHandle);
 
   /*!
    * Destructor.

@@ -1,12 +1,12 @@
 #include <ros/ros.h>
-#include "ros_package_template/RosPackageTemplate.hpp"
+#include "filtered_cloud_publisher/FilteredCloudPublisher.hpp"
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "ros_package_template");
+  ros::init(argc, argv, "filtered_cloud_publisher");
   ros::NodeHandle nodeHandle("~");
 
-  ros_package_template::RosPackageTemplate rosPackageTemplate(nodeHandle);
+  filtered_cloud_publisher::FilteredCloudPublisher rosPackageTemplate(nodeHandle);
 
   ros::spin();
   return 0;

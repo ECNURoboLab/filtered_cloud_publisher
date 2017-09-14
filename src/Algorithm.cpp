@@ -1,6 +1,6 @@
-#include "ros_package_template/Algorithm.hpp"
+#include "filtered_cloud_publisher/Algorithm.hpp"
 
-namespace ros_package_template {
+namespace filtered_cloud_publisher {
 
 Algorithm::Algorithm()
     : average_(0.0),
