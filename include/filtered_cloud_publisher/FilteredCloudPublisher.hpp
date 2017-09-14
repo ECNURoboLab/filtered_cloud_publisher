@@ -21,8 +21,8 @@
 namespace filtered_cloud_publisher {
 
 
-    typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloud;
-    typedef pcl::PointXYZRGB Point;
+    typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
+    typedef pcl::PointXYZ Point;
 
 /*!
  * Main class for the node to handle the ROS interfacing.
@@ -68,6 +68,8 @@ namespace filtered_cloud_publisher {
 
         ros::NodeHandle &nh_;
 
+        ros::NodeHandle p_nh_;
+
         //! ROS topic subscriber.
         ros::Subscriber subscriber_;
 
@@ -92,6 +94,8 @@ namespace filtered_cloud_publisher {
 
         //! Algorithm computation object.
         Algorithm algorithm_;
+
+        bool sended;
     };
 
 } /* namespace */

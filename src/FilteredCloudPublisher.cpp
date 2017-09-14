@@ -9,17 +9,18 @@ namespace filtered_cloud_publisher {
         if (!readParameters()) {
             ROS_ERROR("Could not read parameters.");
             ROS_ERROR("Use default value !!!!");
-            subscriber_topic_ = "/camera/depth_registered/points";
+            subscriber_topic_ = "/camera/depth/points";
 //            ros::requestShutdown();
         }
-        subscriber_ = nh_.subscribe(subscriber_topic_, 1,
+        subscriber_ = p_nh_.subscribe(subscriber_topic_, 1,
                                     &FilteredCloudPublisher::pointCloudCb, this);
-        gpd_indexed_cloud_pub_ = nh_.advertise<gpd::CloudIndexed>("cloud_indexed",1);
-        filtered_cloud_pub_    = nh_.advertise<PointCloud>("over_table_cloud",1);
-        object_cloud_pub_      = nh_.advertise<PointCloud>("object_cloud",1);
-        serviceServer_ = nh_.advertiseService("get_average",
+        gpd_indexed_cloud_pub_ = p_nh_.advertise<gpd::CloudIndexed>("cloud_indexed",1);
+        filtered_cloud_pub_    = p_nh_.advertise<PointCloud>("over_table_cloud",1);
+        object_cloud_pub_      = p_nh_.advertise<PointCloud>("object_cloud",1);
+        serviceServer_ = p_nh_.advertiseService("send_one_cloud",
                                               &FilteredCloudPublisher::serviceCallback, this);
         tf_listener_.reset(new tf::TransformListener);
+        sended = true;
         ROS_INFO("Successfully launched node.");
     }
 
@@ -28,7 +29,7 @@ namespace filtered_cloud_publisher {
     }
 
     bool FilteredCloudPublisher::readParameters() {
-        return nh_.getParam("topic_name", subscriber_topic_);
+        return nh_.getParam("subscriber_topic", subscriber_topic_);
     }
 
     void FilteredCloudPublisher::pointCloudCb(const PointCloud::ConstPtr &cloud_in) {
@@ -45,6 +46,7 @@ namespace filtered_cloud_publisher {
             tf_listener_->lookupTransform ("/table_top", header.frame_id, header.stamp, transform);
         }
         catch(std::runtime_error &e){
+            ROS_ERROR("Could not find /table_top to %s transform", header.frame_id.c_str());
             return;
         }
 
@@ -70,7 +72,11 @@ namespace filtered_cloud_publisher {
 
         gpd::CloudIndexed gpd_cloud;
         createGPDPointCloud(cloud_filtered,gpd_cloud,indices);
-        gpd_indexed_cloud_pub_.publish(gpd_cloud);
+        if(!sended)
+        {
+            gpd_indexed_cloud_pub_.publish(gpd_cloud);
+            sended = true;
+        }
         filtered_cloud_pub_.publish(cloud_filtered);
         object_cloud_pub_.publish(object_cloud);
     }
@@ -103,7 +109,9 @@ namespace filtered_cloud_publisher {
     bool FilteredCloudPublisher::serviceCallback(std_srvs::Trigger::Request &request,
                                                  std_srvs::Trigger::Response &response) {
         response.success = true;
-        response.message = "The average is " + boost::to_string(algorithm_.getAverage());
+        sended = false;
+        response.message = "Successfully sending one image !!! ";
+
         return true;
     }
 

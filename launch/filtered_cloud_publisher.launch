@@ -1,0 +1,8 @@
+<launch>
+
+  <!-- Launch ROS Package Template Node -->
+  <node pkg="filtered_cloud_publisher" type="filtered_cloud_publisher" name="filtered_cloud_publisher" output="screen">
+    <rosparam command="load" file="$(find filtered_cloud_publisher)/config/default.yaml" />
+  </node>
+
+</launch>

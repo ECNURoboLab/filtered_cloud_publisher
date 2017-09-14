@@ -1,1 +1,1 @@
-subscriber_topic: /temperature
+subscriber_topic: /camera/depth/points
