@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 2.8.3)
 project(filtered_cloud_publisher)
 
 ## Use C++11
-add_definitions(--std=c++11)
+# USE PCL so no c++11
+#add_definitions(--std=c++11)
 
 # set test or not
 set(CATKIN_ENABLE_TESTING false)
@@ -11,10 +12,16 @@ set(CATKIN_ENABLE_TESTING false)
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED
   COMPONENTS
-    roscpp
-    sensor_msgs
+        roscpp
+        pcl_conversions
+        pcl_ros
+        tf
+        std_msgs
+        geometry_msgs
+        gpd
 )
 
+find_package(Boost REQUIRED)
 ###################################
 ## catkin specific configuration ##
 ###################################
