@@ -8,8 +8,10 @@
 int main(int argc, char** argv)
 {
 
-    ros::init(argc, argv, "filtered_cloud_publisher");
+    ros::init(argc, argv, "gpd_adapter_action_server");
+    ros::AsyncSpinner spinner(4);
+    spinner.start();
     gpd_adapter_action_server::GpdAdapterActionServer gpd_adapter_action("gpd_adapter_action");
-    ros::spin();
+    ros::waitForShutdown();
     return 0;
 }

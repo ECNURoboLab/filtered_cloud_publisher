@@ -22,12 +22,17 @@ geometry_msgs::Pose creatPickingEEFPose(std::vector<gpd::GraspConfig> grasp_conf
     tf::Matrix3x3 rot_table_grasp(-grasp_config.axis.x,grasp_config.binormal.x,grasp_config.approach.x,
                                  -grasp_config.axis.y,grasp_config.binormal.y,grasp_config.approach.y,
                                  -grasp_config.axis.z,grasp_config.binormal.z,grasp_config.approach.z);
+    tf::Transform tf_z_90;
+    tf_z_90.setIdentity();
+    tf_z_90.setRotation(tf::createQuaternionFromRPY(0,0,3.141592/2));
+    ROS_INFO_STREAM("Z 90:" << tf_z_90.getRotation().x() << "|"<< tf_z_90.getRotation().y()<< "|"<<tf_z_90.getRotation().z()<< "|" <<tf_z_90.getRotation().w() ) ;
+
     // bottom指的是爪子的手掌点
     tf::Vector3 tr_table_grasp(grasp_config.bottom.x,grasp_config.bottom.y,grasp_config.bottom.z);
     tf::Transform tf_table_grasp(rot_table_grasp,tr_table_grasp);
 
 
-    tf_base_object = tf_base_table*tf_table_grasp;
+    tf_base_object = tf_base_table*tf_table_grasp*tf_z_90;
     tf::poseTFToMsg(tf_base_object,grasp_pose);
     return grasp_pose;
 
@@ -40,10 +45,13 @@ geometry_msgs::Pose creatPickingEEFPose(std::vector<gpd::GraspConfig> grasp_conf
                                      -grasp_config.axis.y,grasp_config.binormal.y,grasp_config.approach.y,
                                      -grasp_config.axis.z,grasp_config.binormal.z,grasp_config.approach.z);
         // bottom指的是爪子的手掌点
+        tf::Transform tf_z_90;
+        tf_z_90.setIdentity();
+        tf_z_90.setRotation(tf::createQuaternionFromRPY(0,0,3.141592/2));
         tf::Vector3 tr_base_grasp(grasp_config.bottom.x,grasp_config.bottom.y,grasp_config.bottom.z);
         tf::Transform tf_base_grasp(rot_base_grasp,tr_base_grasp);
 
-        tf::poseTFToMsg(tf_base_grasp,grasp_pose);
+        tf::poseTFToMsg(tf_base_grasp*tf_z_90,grasp_pose);
         return grasp_pose;
     }
 
@@ -120,11 +128,21 @@ namespace gpd_adapter_action_server{
         as_.registerPreemptCallback(boost::bind(&GpdAdapterActionServer::preemptCB,this));
         // 发送gpd点云 触发服务
         service_client_ = nh_.serviceClient<std_srvs::Trigger>("send_one_cloud");
+        if(!service_client_.waitForExistence(ros::Duration(5)))
+        {
+            ROS_INFO("send one cloud does not exist !!!!");
+            exit(1);
+
+        }
         // gpd 抓取结果订阅
         sub_ = nh_.subscribe<gpd::GraspConfigList>("/detect_grasps/clustered_grasps",1,&GpdAdapterActionServer::analysisCB,this);
         // 标记选中的姿态
         marker_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("/selected_pose",1);
         tf_listener_.reset(new tf::TransformListener);
+        ROS_INFO("successfully launched gpd adapter action server!!!!!!");
+
+        //! 所有的action，如果在开始的时候不选择启动，就要手动启动
+        as_.start();
     }
 
     GpdAdapterActionServer::~GpdAdapterActionServer()
@@ -134,6 +152,8 @@ namespace gpd_adapter_action_server{
     void GpdAdapterActionServer::goalCB()
     {
         std_srvs::Trigger req;
+        //! action 在使用的时候要注意，必须接受新的goal，才可以开始一个任务。
+        as_.acceptNewGoal();
         service_client_.call(req);
         if(req.response.success)
         {
@@ -148,14 +168,17 @@ namespace gpd_adapter_action_server{
     }
     void GpdAdapterActionServer::analysisCB(const gpd::GraspConfigList msg)
     {
+        ROS_INFO_STREAM("--------Received : " << msg.grasps.size() << "grasps---------");
+        ROS_INFO_STREAM("is active "<< as_.isActive() );
+        ROS_INFO_STREAM("is preemt" << as_.isPreemptRequested());
         if (!as_.isActive() || as_.isPreemptRequested()) return;
         filtered_cloud_publisher::GpdAdapterResult result;
-        ROS_INFO_STREAM("--------Received : " << msg.grasps.size() << "grasps---------");
+
         geometry_msgs::Pose res_pose;
         tf::StampedTransform transform;
         try{
-            tf_listener_->waitForTransform("/base_link", "/table_top", ros::Time::now(), ros::Duration(5.0));
-            tf_listener_->lookupTransform ("/base_link", "/table_top", ros::Time(0), transform);
+            tf_listener_->waitForTransform("/camera_link", "/table_top", ros::Time::now(), ros::Duration(5.0));
+            tf_listener_->lookupTransform ("/camera_link", "/table_top", ros::Time(0), transform);
         }
         catch(std::runtime_error &e){
             ROS_ERROR("Could not find /base_link to /table_top transform");
